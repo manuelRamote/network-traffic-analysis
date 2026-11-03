@@ -83,7 +83,7 @@ Look for `Client Hello` and `Server Hello` and relevant metadata. HTTPS applicat
 
 ## 4. Record findings
 
-Use [the report template](../reports/traffic-analysis-template.md). Include:
+Use [the technical report](../reports/network-traffic-report.md) as a reference and record findings from your own capture. Include:
 
 - Date (approximate is enough for a public version) and isolated lab description
 - OS and Wireshark versions
@@ -96,4 +96,4 @@ Use [the report template](../reports/traffic-analysis-template.md). Include:
 
 Do not commit unreviewed `.pcap` or `.pcapng` files. Packet captures can contain MAC addresses, IP addresses, DNS history, tokens, cookies and other sensitive information.
 
-For a public-facing portfolio, favor screenshots with identifying values redacted and a written analysis; if a PCAP is essential, generate a separate synthetic or safely sanitized example first.
+For a public-facing portfolio, favor screenshots with identifying values redacted and a written analysis; if a PCAP is essential, generate a separate synthetic or safely sanitized example first. See the [evidence checklist](../evidence/README.md).
