@@ -21,7 +21,7 @@ A hands-on Blue Team laboratory for capturing, filtering, and interpreting netwo
 | Test traffic | `ping`, `nslookup` or `dig`, `curl` |
 | Test destination | `microsoft.com` (DNS) and `1.1.1.1` (ICMP) |
 
-The OS and Wireshark versions were verified from local commands. ICMP, DNS and TCP/TLS captures have been reviewed. A separate curl test confirmed TLS 1.3, certificate/hostname verification and an HTTP/2 HEAD request; the HTTP response status has not yet been captured. Final evidence preparation and presentation are pending.
+The OS and Wireshark versions were verified from local commands. ICMP, DNS and TCP/TLS captures have been reviewed. A separate curl test confirmed TLS 1.3, certificate/hostname verification and an HTTP/2 HEAD request; an additional HEAD request returned HTTP 301 (permanent redirect). Final evidence preparation and presentation are pending.
 
 ## Project structure
 
