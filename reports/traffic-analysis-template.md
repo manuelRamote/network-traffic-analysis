@@ -1,6 +1,6 @@
 # Network Traffic Analysis — Lab Report
 
-> **Status:** In progress — ICMP capture reviewed; DNS and TCP/TLS analyses pending.
+> **Status:** In progress — ICMP and DNS captures reviewed; TCP/TLS analysis pending.
 
 ## 1. Investigation summary
 
@@ -26,7 +26,7 @@
 
 ```bash
 ping -c 4 1.1.1.1
-nslookup example.com
+dig microsoft.com
 curl -I https://example.com
 ```
 
@@ -63,12 +63,32 @@ tls
 
 **Methodology note:** the ICMP types are Echo Request = **8** and Echo Reply = **0**; the `Time` column reflects capture timestamps, so the round-trip estimate includes the capture's timing and matching uncertainty.
 
-### 4.2 DNS
+### 4.2 DNS — Verified findings
 
-- Query type(s): _Pending_
-- Resolver behavior and response: _Pending_
-- Interpretation: _Pending_
-- Screenshot: _Not added_
+**Test:** `dig microsoft.com`
+
+**Display filter:** `dns.qry.name == "microsoft.com"`
+
+**Evidence:** Two packets in the user-provided Wireshark screenshots, one request and one response.
+
+| Field | Value observed |
+| --- | --- |
+| Requested domain | `microsoft.com` |
+| Query type and class | `A`, `IN` |
+| Protocol | UDP; source port `51955`, destination port `53` (reversed on reply) |
+| DNS resolver | `100.100.1.1` (lab-observed; not inferred to be any particular public DNS provider) |
+| Requesting host | Private VM address (omitted from public-facing report) |
+| Transaction ID | `0x28be` on both request and response |
+| Response code | `NOERROR (0)` |
+| Answer | One A record: `150.171.109.83` at capture time |
+| DNS response time | `7.186521 ms` (Wireshark) |
+| Frame sizes | 96 bytes (request); 128 bytes (response) |
+| Recursive resolver | Recursion desired in query; recursion available in reply |
+| Authoritative response | No (AA flag not set) |
+
+**Interpretation:** The DNS resolver answered the A-record question successfully, and the transaction identifier pairs the two observed DNS packets. The returned A record reflects this particular response and may change between queries or networks. The screenshots do not expose the DNS record TTL; do not substitute the IPv4 packet TTL.
+
+**Limitations:** This demonstrates DNS resolution, not successful TCP/TLS connectivity to the resolved address. The screenshots were reviewed for analysis but are **not committed** to the repository pending redaction of local network identifiers.
 
 ### 4.3 TCP / TLS
 
@@ -79,13 +99,13 @@ tls
 
 ## 5. Findings and limitations
 
-- **Confirmed observations:** Four ICMP Echo Requests to `1.1.1.1` have four corresponding replies in the reviewed capture; mean observed RTT ≈ 14.63 ms.
-- **Uncertainties / limitations:** These findings are based on a screenshot, not the original packet capture or ping summary. DNS and TCP/TLS evidence has not yet been reviewed.
-- **Potential next tests:** Review DNS query/response and TCP/TLS handshake evidence from the controlled lab.
+- **Confirmed observations:** Four ICMP Echo Requests to `1.1.1.1` have four corresponding replies (mean observed RTT ≈ 14.63 ms). A DNS A-record query for `microsoft.com` returned `NOERROR` and one observed address, with Wireshark response time 7.186521 ms.
+- **Uncertainties / limitations:** ICMP and DNS findings are based on screenshots, not the original packet captures. The DNS record TTL is not visible in the screenshots. TCP/TLS evidence has not yet been reviewed.
+- **Potential next tests:** Examine the DNS answer TTL by expanding its record fields; then review TCP three-way handshake and TLS ClientHello/ServerHello evidence.
 
 ## 6. Conclusions
 
-The verified ICMP test demonstrates bidirectional Echo Request/Reply communication for all four test packets visible in the screenshot. The broader investigation remains in progress pending DNS and TCP/TLS validation.
+The verified ICMP test demonstrates bidirectional Echo Request/Reply communication for all four test packets visible in the screenshot. The DNS test demonstrates successful name resolution for an A record of `microsoft.com`. Further analysis remains in progress pending TCP and TLS validation.
 
 ## 7. Data handling
 
