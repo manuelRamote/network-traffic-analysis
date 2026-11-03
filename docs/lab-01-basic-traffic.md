@@ -37,7 +37,7 @@ Run the following in a separate terminal, one command at a time:
 ping -c 4 1.1.1.1
 
 # DNS lookup
-nslookup example.com
+dig microsoft.com
 
 # HTTPS request (TCP + TLS, unless a proxy changes the flow)
 curl -I https://example.com
@@ -63,7 +63,7 @@ Look for ICMP echo requests and echo replies. Record the packet count, source/de
 dns
 ```
 
-Inspect query and response packets, queried name, record type and response code. Note the possibility of different DNS record types or resolver behavior.
+Use `dns.qry.name == "microsoft.com"` to focus on this lab's query. Inspect request and response packets, transaction ID, queried name, record type, response code, DNS response time, and the answer record TTL if visible in the expanded fields. Note the possibility of different DNS record types or resolver behavior.
 
 ### C. TCP connection establishment
 
