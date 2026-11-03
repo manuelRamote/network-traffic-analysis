@@ -1,0 +1,9 @@
+# Prevent accidental upload of raw network captures
+*.pcap
+*.pcapng
+*.cap
+
+# Local files
+.DS_Store
+*.swp
+*.tmp
