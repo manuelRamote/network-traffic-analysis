@@ -19,9 +19,9 @@ A hands-on Blue Team laboratory for capturing, filtering, and interpreting netwo
 | Operating system | Kali GNU/Linux 2026.3 (observed in local test) |
 | Network analysis | Wireshark 4.6.6, interface `eth0` |
 | Test traffic | `ping`, `nslookup` or `dig`, `curl` |
-| Test destination | `example.com` and `1.1.1.1` (illustrative public endpoints) |
+| Test destination | `microsoft.com` (DNS) and `1.1.1.1` (ICMP) |
 
-The OS and Wireshark versions were verified from local commands. An initial ICMP capture has been reviewed; remaining tests are pending.
+The OS and Wireshark versions were verified from local commands. ICMP and DNS captures have been reviewed; TCP/TLS testing is pending.
 
 ## Project structure
 
@@ -40,7 +40,7 @@ Screenshots will be added only after reviewing them for sensitive details. Raw p
 
 | Exercise | Protocol | Status |
 | --- | --- | --- |
-| 01 — DNS resolution | DNS | Not started |
+| 01 — DNS resolution | DNS | Reviewed: A-record query/response (`microsoft.com`) |
 | 02 — Echo request / reply | ICMP | Reviewed: 4 request/reply pairs |
 | 03 — Connection setup & encryption metadata | TCP / TLS | Not started |
 
@@ -49,7 +49,7 @@ Follow the instructions in [Lab 01](docs/lab-01-basic-traffic.md) and see the [o
 ## Wireshark display filters
 
 ```text
-dns
+dns.qry.name == "microsoft.com"
 icmp
 tcp.flags.syn == 1 && tcp.flags.ack == 0
 tls
@@ -71,4 +71,4 @@ tls
 
 ---
 
-*This is an educational, independently documented lab. Only observations supported by reviewed evidence are reported; DNS and TLS analysis are still in progress.*
+*This is an educational, independently documented lab. Only observations supported by reviewed evidence are reported; TCP/TLS analysis is still in progress.*
