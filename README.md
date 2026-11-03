@@ -21,7 +21,7 @@ A hands-on Blue Team laboratory for capturing, filtering, and interpreting netwo
 | Test traffic | `ping`, `nslookup` or `dig`, `curl` |
 | Test destination | `microsoft.com` (DNS) and `1.1.1.1` (ICMP) |
 
-The OS and Wireshark versions were verified from local commands. ICMP and DNS captures have been reviewed; TCP/TLS testing is pending.
+The OS and Wireshark versions were verified from local commands. ICMP, DNS and TCP/TLS captures have been reviewed. Final evidence preparation and presentation are pending.
 
 ## Project structure
 
@@ -42,7 +42,7 @@ Screenshots will be added only after reviewing them for sensitive details. Raw p
 | --- | --- | --- |
 | 01 — DNS resolution | DNS | Reviewed: A-record query/response (`microsoft.com`) |
 | 02 — Echo request / reply | ICMP | Reviewed: 4 request/reply pairs |
-| 03 — Connection setup & encryption metadata | TCP / TLS | Not started |
+| 03 — Connection setup & encryption metadata | TCP / TLS | Reviewed: complete three-way handshake, TLS 1.3 and orderly close |
 
 Follow the instructions in [Lab 01](docs/lab-01-basic-traffic.md) and see the [ongoing traffic analysis report](reports/traffic-analysis-template.md) for verified findings.
 
@@ -71,4 +71,4 @@ tls
 
 ---
 
-*This is an educational, independently documented lab. Only observations supported by reviewed evidence are reported; TCP/TLS analysis is still in progress.*
+*This is an educational, independently documented lab. All three protocol exercises have been analyzed from reviewed screenshots. Sanitized evidence and final polishing remain in progress.*
