@@ -14,11 +14,11 @@
 
 | Field | Value |
 | --- | --- |
-| Operating system/version | _Pending_ |
+| Operating system/version | Kali GNU/Linux 2026.3 |
 | Virtualization platform | _Pending_ |
-| Wireshark version | _Pending_ |
+| Wireshark version | 4.6.6 |
 | Network mode (NAT/host-only/etc.) | _Pending_ |
-| Interface used | _Pending; do not publish private addressing_ |
+| Interface used | `eth0` (active; addressing intentionally omitted) |
 
 ## 3. Methodology
 
