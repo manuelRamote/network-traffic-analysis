@@ -1,16 +1,16 @@
 # Evidence preparation and privacy checklist
 
-The original Wireshark and terminal screenshots were reviewed during the lab but **have not been uploaded**. This folder will hold sanitized images when they are ready.
+One sanitized screenshot (`07-http-301.png`) has been uploaded. Other image evidence remains pending upload and/or recapture. The original Wireshark and terminal screenshots were reviewed during the lab; only explicitly reviewed and sanitized images should be added here.
 
 ## Planned screenshots
 
 | Suggested filename | Content to preserve | Redact or crop |
 | --- | --- | --- |
-| `icmp-echo.png` | Four request/reply pairs, sequence correlation, timings | Private IPs, interface MACs, machine-identifying labels |
-| `dns-query-response.png` | Query name, A-record answer, transaction ID, NOERROR, response time | Local resolver and client addresses where identifiable; MACs |
-| `tcp-handshake.png` | SYN, SYN-ACK, ACK, TCP stream index | Client private IP and MAC addresses |
-| `tls-13-session.png` | ClientHello, ServerHello, TLS version, encrypted-data markers | Client private IP and any unrelated connection data |
-| `https-verification.png` | Certificate verify result, negotiated TLS/HTTP, HTTP 301 | Hostname of local machine, paths, unrelated output and local IP |
+| `01-icmp-echo.png` | Four request/reply pairs, sequence correlation, timings | Private IPs, interface MACs, machine-identifying labels |
+| `02-dns-query.png` and `03-dns-response.png` | Query name, A-record answer, transaction ID, NOERROR, response time | Local resolver and client addresses where identifiable; MACs |
+| `04-tcp-handshake.png` | SYN, SYN-ACK, ACK, TCP stream index | Client private IP and MAC addresses |
+| `05-tls13-session.png` | ClientHello, ServerHello, TLS version, encrypted-data markers | Client private IP and any unrelated connection data |
+| `06-https-certificate.png` | Certificate verify result, negotiated TLS/HTTP, HTTP 301 | Hostname of local machine, paths, unrelated output and local IP |
 
 ## Publication checks
 
@@ -30,3 +30,15 @@ Do **not** commit raw `.pcap` or `.pcapng` files from a personal or corporate ne
 Until screenshot redaction is complete, use the packet summaries and the [technical report](../reports/network-traffic-report.md) as the validated evidence.
 
 > **Caution:** Simply blurring a small area can leave information recoverable or readable. Prefer opaque masks or cropping. Keep original evidence privately outside the public repository.
+
+## Evidence upload tracking
+
+| Evidence | Status |
+| --- | --- |
+| `01-icmp-echo.png` | Sanitized locally; upload pending |
+| `02-dns-query.png` | Improved capture pending |
+| `03-dns-response.png` | Improved capture pending |
+| `04-tcp-handshake.png` | Sanitized locally; upload pending |
+| `05-tls13-session.png` | Improved split captures pending |
+| `06-https-certificate.png` | Sanitized locally; upload pending |
+| `07-http-301.png` | Uploaded and linked in README |
