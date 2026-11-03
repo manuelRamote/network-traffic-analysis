@@ -90,18 +90,35 @@ tls
 
 **Limitations:** This demonstrates DNS resolution, not successful TCP/TLS connectivity to the resolved address. The screenshots were reviewed for analysis but are **not committed** to the repository pending redaction of local network identifiers.
 
-### 4.3 TCP / TLS
+### 4.3 TCP / TLS — Partial findings (SYN verified)
 
-- TCP handshake: _Pending_
-- TLS metadata observed: _Pending_
-- Interpretation: _Pending_
-- Screenshot: _Not added_
+**Observed packet:** Frame 3 in Wireshark, captured on `eth0` with display filter `tcp.flags.syn == 1 && tcp.flags.ack == 0`.
+
+| Field | Observed value |
+| --- | --- |
+| Source | Private Kali VM IPv4 address (omitted from public-facing report) |
+| Destination | `150.171.109.83` |
+| Source → destination port | `50458 → 443` |
+| TCP flags | `0x002` (SYN set, ACK not set) |
+| TCP stream index | `0` |
+| TCP payload length | `0 bytes` |
+| Frame length | `74 bytes` |
+| Relative sequence number | `0` |
+| Advertised TCP window | `64240` |
+| Maximum Segment Size (MSS) | `1460` |
+| Other options | SACK permitted, timestamps and window scaling |
+
+**Interpretation:** Kali initiated a TCP connection to port 443 of the same IPv4 address previously returned by the DNS A record for `microsoft.com`. The screenshot validates the initial SYN packet **only**. It does not by itself establish successful completion of the TCP three-way handshake, TLS negotiation, or an HTTP response.
+
+**Next evidence required:** Remove the SYN-only filter and use `tcp.stream == 0` to inspect the same connection, including SYN-ACK and final ACK. Then inspect any TLS ClientHello/ServerHello packets, if present.
+
+**Screenshot:** reviewed in the working session; not uploaded to the repository, pending removal of network identifiers.
 
 ## 5. Findings and limitations
 
 - **Confirmed observations:** Four ICMP Echo Requests to `1.1.1.1` have four corresponding replies (mean observed RTT ≈ 14.63 ms). A DNS A-record query for `microsoft.com` returned `NOERROR` and one observed address, with Wireshark response time 7.186521 ms.
-- **Uncertainties / limitations:** ICMP and DNS findings are based on screenshots, not the original packet captures. The DNS record TTL is not visible in the screenshots. TCP/TLS evidence has not yet been reviewed.
-- **Potential next tests:** Examine the DNS answer TTL by expanding its record fields; then review TCP three-way handshake and TLS ClientHello/ServerHello evidence.
+- **Uncertainties / limitations:** ICMP and DNS findings are based on screenshots, not the original packet captures. The DNS record TTL is not visible in the screenshots. The initial TCP SYN has been reviewed, but handshake completion and TLS evidence remain unverified.
+- **Potential next tests:** Inspect `tcp.stream == 0` for SYN-ACK and final ACK; then review TLS ClientHello/ServerHello evidence. Optionally inspect DNS record TTL.
 
 ## 6. Conclusions
 
