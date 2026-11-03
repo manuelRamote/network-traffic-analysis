@@ -27,7 +27,7 @@
 ```bash
 ping -c 4 1.1.1.1
 dig microsoft.com
-curl -4 -I https://microsoft.com
+curl -4 -I -v https://microsoft.com
 ```
 
 **Wireshark display filters:**
@@ -133,17 +133,38 @@ The shown stream closes with a normal TCP FIN/ACK exchange; no RST frame is visi
 
 **Conclusion:** the supplied screenshots demonstrate the complete TCP three-way handshake, TLS 1.3 handshake messages and subsequent encrypted data exchange, and orderly connection termination.
 
+#### D. Separate HTTPS verification with curl
+
+**Command:** `curl -4 -I -v https://microsoft.com`
+
+The provided terminal screenshot documents a **separate HTTPS session**. Its local source port is `52394`, rather than `50458` in the previously inspected Wireshark stream, so these are not presented as the same TCP connection.
+
+| Field | Observed value |
+| --- | --- |
+| Resolved destination | `150.171.109.83:443` |
+| Negotiated TLS version | TLS 1.3 |
+| TLS cipher suite | `TLS_AES_256_GCM_SHA384` |
+| Key exchange named by curl | `X25519MLKEM768` |
+| Signature algorithm | `RSASSA-PSS` |
+| Certificate hostname check | `microsoft.com` matched certificate Subject Alternative Name |
+| Certificate verification | `SSL certificate verify ok`; OpenSSL verify result `0` |
+| HTTP protocol | HTTP/2, via ALPN |
+| HTTP request | `HEAD /` with authority `microsoft.com` |
+| HTTP status | **Not visible in the provided screenshot; pending verification** |
+
+**Assessment:** The terminal output verifies that the local curl/OpenSSL client accepted the presented certificate and negotiated a TLS 1.3 connection. A HEAD request was issued over HTTP/2. The screenshot does **not** include the server response headers or an HTTP status code. The observed hybrid `X25519MLKEM768` key exchange combines classic and post-quantum key establishment mechanisms.
+
 **Evidence handling:** screenshots reviewed in the working session. The original screenshots include private lab identifiers and have **not** been committed to GitHub.
 
 ## 5. Findings and limitations
 
 - **Confirmed observations:** Four ICMP Echo Requests to `1.1.1.1` have four corresponding replies (mean observed RTT ≈ 14.63 ms). A DNS A-record query for `microsoft.com` returned `NOERROR` and one observed address (response time 7.186521 ms). TCP stream 0 shows the complete SYN/SYN-ACK/ACK handshake to port 443, a TLS 1.3 ClientHello and ServerHello, encrypted application data, and a FIN/ACK closure.
-- **Uncertainties / limitations:** Findings are based on screenshots, not full original PCAP files. The DNS record TTL was not visible; the TLS certificate chain and HTTP status code were not independently validated. Screenshots still require redaction before publication.
-- **Potential next tests:** Check the HTTPS response with `curl -4 -I -v https://microsoft.com`, record sanitized evidence, and optionally inspect DNS answer TTL.
+- **Uncertainties / limitations:** Findings are based on screenshots, not full original PCAP files. The DNS record TTL was not visible; curl reports a successful certificate/hostname validation in a separate session, while the HTTP response status remains unavailable in the supplied screenshot. Screenshots still require redaction before publication.
+- **Potential next tests:** Capture the HTTP response status and headers from `curl -4 -I https://microsoft.com`, record sanitized evidence, and optionally inspect DNS answer TTL.
 
 ## 6. Conclusions
 
-The ICMP test demonstrates four matched Echo Request/Reply exchanges. The DNS test shows successful resolution of an A record for `microsoft.com`. The TCP stream confirms connection establishment, TLS 1.3 negotiation and encrypted traffic exchange, followed by an orderly close. The project is technically analyzed but the public-facing evidence and presentation still need preparation.
+The ICMP test demonstrates four matched Echo Request/Reply exchanges. The DNS test shows successful resolution of an A record for `microsoft.com`. The TCP stream confirms connection establishment, TLS 1.3 negotiation and encrypted traffic exchange, followed by an orderly close. A separate curl test confirmed successful TLS certificate/hostname validation and an HTTP/2 HEAD request (response status not yet visible). The project is technically analyzed but the public-facing evidence and presentation still need preparation.
 
 ## 7. Data handling
 
