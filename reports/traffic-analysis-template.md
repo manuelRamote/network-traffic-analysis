@@ -1,6 +1,6 @@
 # Network Traffic Analysis — Lab Report
 
-> **Status:** In progress — ICMP and DNS captures reviewed; TCP/TLS analysis pending.
+> **Status:** Three protocol exercises analyzed (ICMP, DNS, TCP/TLS); documentation and sanitized evidence pending.
 
 ## 1. Investigation summary
 
@@ -27,7 +27,7 @@
 ```bash
 ping -c 4 1.1.1.1
 dig microsoft.com
-curl -I https://example.com
+curl -4 -I https://microsoft.com
 ```
 
 **Wireshark display filters:**
@@ -90,39 +90,60 @@ tls
 
 **Limitations:** This demonstrates DNS resolution, not successful TCP/TLS connectivity to the resolved address. The screenshots were reviewed for analysis but are **not committed** to the repository pending redaction of local network identifiers.
 
-### 4.3 TCP / TLS — Partial findings (SYN verified)
+### 4.3 TCP / TLS — Verified TCP handshake and TLS exchange
 
-**Observed packet:** Frame 3 in Wireshark, captured on `eth0` with display filter `tcp.flags.syn == 1 && tcp.flags.ack == 0`.
+**Test context:** HTTPS connection to `microsoft.com`, using the IPv4 address `150.171.109.83` observed in the earlier DNS response. Packet data was inspected using Wireshark display filter `tcp.stream == 0` on interface `eth0`.
 
-| Field | Observed value |
-| --- | --- |
-| Source | Private Kali VM IPv4 address (omitted from public-facing report) |
-| Destination | `150.171.109.83` |
-| Source → destination port | `50458 → 443` |
-| TCP flags | `0x002` (SYN set, ACK not set) |
-| TCP stream index | `0` |
-| TCP payload length | `0 bytes` |
-| Frame length | `74 bytes` |
-| Relative sequence number | `0` |
-| Advertised TCP window | `64240` |
-| Maximum Segment Size (MSS) | `1460` |
-| Other options | SACK permitted, timestamps and window scaling |
+**Connection:** Kali VM (private address omitted), ephemeral port `50458` → `150.171.109.83:443`.
 
-**Interpretation:** Kali initiated a TCP connection to port 443 of the same IPv4 address previously returned by the DNS A record for `microsoft.com`. The screenshot validates the initial SYN packet **only**. It does not by itself establish successful completion of the TCP three-way handshake, TLS negotiation, or an HTTP response.
+#### A. TCP three-way handshake
 
-**Next evidence required:** Remove the SYN-only filter and use `tcp.stream == 0` to inspect the same connection, including SYN-ACK and final ACK. Then inspect any TLS ClientHello/ServerHello packets, if present.
+| Frame | Capture time (s) | Direction | Flags | Relative sequence / acknowledgment |
+| --- | ---: | --- | --- | --- |
+| 3 | 0.007664583 | Client → server | SYN | Seq=0 |
+| 4 | 0.021504309 | Server → client | SYN, ACK | Seq=0, Ack=1 |
+| 5 | 0.021553536 | Client → server | ACK | Seq=1, Ack=1 |
 
-**Screenshot:** reviewed in the working session; not uploaded to the repository, pending removal of network identifiers.
+- **SYN → SYN-ACK elapsed time:** approximately **13.84 ms** (computed from capture timestamps).
+- The final ACK confirms that the TCP three-way handshake completed in this observed conversation.
+- The original SYN advertised MSS `1460`, SACK permitted, timestamps and window scaling.
+
+#### B. TLS 1.3 exchange
+
+| Frame | Wireshark description | Interpretation |
+| --- | --- | --- |
+| 6 | TLSv1.3 Client Hello (SNI=`microsoft.com`) | Client begins TLS negotiation and provides the indicated hostname |
+| 9 | TLSv1.3 Server Hello, Change Cipher Spec, Application Data | Server responds with TLS negotiation material |
+| 23 | TLSv1.3 Application Data | Reassembled TLS records containing encrypted data |
+| 27 | TLSv1.3 Change Cipher Spec, Application Data | Additional client-to-server TLS records |
+| 29–37 | TLSv1.3 Application Data and TCP acknowledgments | Encrypted traffic exchanged in both directions |
+
+Wireshark decodes the connection as **TLS 1.3** and displays encrypted application-data records. The screenshots alone do **not** establish the HTTP status code, validate the server certificate chain, or reveal application payload contents.
+
+#### C. TCP connection termination
+
+| Frame | Direction | Flags |
+| --- | --- | --- |
+| 39 | Client → server | FIN, ACK |
+| 40 | Server → client | ACK |
+| 41 | Server → client | FIN, ACK |
+| 42 | Client → server | ACK |
+
+The shown stream closes with a normal TCP FIN/ACK exchange; no RST frame is visible in this conversation.
+
+**Conclusion:** the supplied screenshots demonstrate the complete TCP three-way handshake, TLS 1.3 handshake messages and subsequent encrypted data exchange, and orderly connection termination.
+
+**Evidence handling:** screenshots reviewed in the working session. The original screenshots include private lab identifiers and have **not** been committed to GitHub.
 
 ## 5. Findings and limitations
 
-- **Confirmed observations:** Four ICMP Echo Requests to `1.1.1.1` have four corresponding replies (mean observed RTT ≈ 14.63 ms). A DNS A-record query for `microsoft.com` returned `NOERROR` and one observed address, with Wireshark response time 7.186521 ms.
-- **Uncertainties / limitations:** ICMP and DNS findings are based on screenshots, not the original packet captures. The DNS record TTL is not visible in the screenshots. The initial TCP SYN has been reviewed, but handshake completion and TLS evidence remain unverified.
-- **Potential next tests:** Inspect `tcp.stream == 0` for SYN-ACK and final ACK; then review TLS ClientHello/ServerHello evidence. Optionally inspect DNS record TTL.
+- **Confirmed observations:** Four ICMP Echo Requests to `1.1.1.1` have four corresponding replies (mean observed RTT ≈ 14.63 ms). A DNS A-record query for `microsoft.com` returned `NOERROR` and one observed address (response time 7.186521 ms). TCP stream 0 shows the complete SYN/SYN-ACK/ACK handshake to port 443, a TLS 1.3 ClientHello and ServerHello, encrypted application data, and a FIN/ACK closure.
+- **Uncertainties / limitations:** Findings are based on screenshots, not full original PCAP files. The DNS record TTL was not visible; the TLS certificate chain and HTTP status code were not independently validated. Screenshots still require redaction before publication.
+- **Potential next tests:** Check the HTTPS response with `curl -4 -I -v https://microsoft.com`, record sanitized evidence, and optionally inspect DNS answer TTL.
 
 ## 6. Conclusions
 
-The verified ICMP test demonstrates bidirectional Echo Request/Reply communication for all four test packets visible in the screenshot. The DNS test demonstrates successful name resolution for an A record of `microsoft.com`. Further analysis remains in progress pending TCP and TLS validation.
+The ICMP test demonstrates four matched Echo Request/Reply exchanges. The DNS test shows successful resolution of an A record for `microsoft.com`. The TCP stream confirms connection establishment, TLS 1.3 negotiation and encrypted traffic exchange, followed by an orderly close. The project is technically analyzed but the public-facing evidence and presentation still need preparation.
 
 ## 7. Data handling
 
