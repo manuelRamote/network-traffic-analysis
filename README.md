@@ -1,74 +1,105 @@
 # Network Traffic Analysis Lab
 
-> **Status:** In progress · Private working repository
+![Status](https://img.shields.io/badge/Lab-Analysis%20completed-238636?style=flat-square)
+![Focus](https://img.shields.io/badge/Focus-Blue%20Team-0969da?style=flat-square)
+![Tools](https://img.shields.io/badge/Tools-Wireshark%20%7C%20Kali%20Linux-555?style=flat-square)
 
-A hands-on Blue Team laboratory for capturing, filtering, and interpreting network traffic with Wireshark. The goal is to document a reproducible analysis of **DNS**, **ICMP**, and **TCP/TLS** communications using traffic intentionally generated in a controlled environment.
+**From DNS resolution to an HTTPS response: a packet-level investigation using Wireshark.**
 
-## Objectives
+A hands-on networking and Blue Team portfolio project that follows real, intentionally generated traffic through **ICMP, DNS, TCP, TLS 1.3 and HTTP/2**. Each finding below was checked against packet screenshots or terminal output from the lab.
 
-- Identify the active network interface and capture traffic safely.
-- Understand DNS queries and responses.
-- Examine ICMP echo requests and replies.
-- Identify the TCP three-way handshake and inspect TLS negotiation metadata (not decrypted application content).
-- Document observations with filters, screenshots, and a concise technical report.
+> **Publication status:** The technical analysis is complete. This repository remains **private** while evidence screenshots are reviewed and sanitized for public sharing.
 
-## Lab environment
+## Investigation at a glance
 
-| Component | Planned setup |
-| --- | --- |
-| Operating system | Kali GNU/Linux 2026.3 (observed in local test) |
-| Network analysis | Wireshark 4.6.6, interface `eth0` |
-| Test traffic | `ping`, `nslookup` or `dig`, `curl` |
-| Test destination | `microsoft.com` (DNS) and `1.1.1.1` (ICMP) |
+| Layer / test | Observed result | Evidence |
+| --- | --- | --- |
+| ICMP reachability | 4 Echo Requests, 4 matching replies; mean observed RTT **14.63 ms** | Wireshark `icmp` capture |
+| DNS resolution | `microsoft.com` returned `NOERROR` and one A record; **7.186521 ms** | Wireshark DNS request + reply |
+| TCP transport | Full **SYN → SYN-ACK → ACK** to port **443**; SYN→SYN-ACK **13.84 ms** | TCP stream 0 |
+| TLS security | **TLS 1.3** messages and encrypted application data observed | Wireshark + curl |
+| Certificate check | Hostname match and **successful certificate verification** reported by curl | `curl -v` |
+| HTTP | **301 Moved Permanently** returned to a HEAD request | Separate `curl -I` test |
 
-The OS and Wireshark versions were verified from local commands. ICMP, DNS and TCP/TLS captures have been reviewed. A separate curl test confirmed TLS 1.3, certificate/hostname verification and an HTTP/2 HEAD request; an additional HEAD request returned HTTP 301 (permanent redirect). Final evidence preparation and presentation are pending.
+These are observations from separate controlled tests. In particular, the last curl request is **not** the same TCP session as the original Wireshark stream.
 
-## Project structure
+## Network flow
 
-```text
-network-traffic-analysis/
-├── README.md
-├── docs/
-│   └── lab-01-basic-traffic.md
-└── reports/
-    └── traffic-analysis-template.md
+The following sequence is a **reconstruction from the observed evidence**, not a packet screenshot.
+
+```mermaid
+sequenceDiagram
+    participant K as Kali Linux (client)
+    participant D as DNS resolver
+    participant M as microsoft.com endpoint
+    K->>D: DNS A query for microsoft.com
+    D-->>K: NOERROR / A 150.171.109.83
+    K->>M: TCP SYN to 443
+    M-->>K: SYN-ACK
+    K->>M: ACK
+    K->>M: TLS ClientHello (SNI: microsoft.com)
+    M-->>K: TLS ServerHello / subsequent TLS records
+    K->>M: Encrypted TLS traffic
+    M-->>K: Encrypted TLS traffic
+    Note over K,M: Separate curl check verified certificate and HTTP 301
 ```
 
-Screenshots will be added only after reviewing them for sensitive details. Raw packet captures are intentionally excluded from version control by default.
+## Lab setup
 
-## Exercises
+| Item | Observed / configured |
+| --- | --- |
+| Operating system | Kali GNU/Linux **2026.3** |
+| Packet analyzer | Wireshark **4.6.6** |
+| Capture interface | `eth0` |
+| Test endpoints | `1.1.1.1` (ICMP), `microsoft.com` (DNS/HTTPS) |
+| Auxiliary tools | `ping`, `dig`, `curl` |
 
-| Exercise | Protocol | Status |
-| --- | --- | --- |
-| 01 — DNS resolution | DNS | Reviewed: A-record query/response (`microsoft.com`) |
-| 02 — Echo request / reply | ICMP | Reviewed: 4 request/reply pairs |
-| 03 — Connection setup & encryption metadata | TCP / TLS | Reviewed: complete three-way handshake, TLS 1.3 and orderly close |
+The hypervisor and exact VM network mode have not been independently documented.
 
-Follow the instructions in [Lab 01](docs/lab-01-basic-traffic.md) and see the [ongoing traffic analysis report](reports/traffic-analysis-template.md) for verified findings.
+## Reproduce the tests
 
-## Wireshark display filters
+Start a short Wireshark capture on your **own authorized network interface**, then run:
 
-```text
-dns.qry.name == "microsoft.com"
+```bash
+ping -c 4 1.1.1.1
+dig microsoft.com
+curl -4 -I -v https://microsoft.com
+curl -4 -sS -o /dev/null -w 'HTTP status: %{http_code}\n' -I https://microsoft.com
+```
+
+Useful **Wireshark display filters** (apply one at a time):
+
+```wireshark
 icmp
+dns.qry.name == "microsoft.com"
 tcp.flags.syn == 1 && tcp.flags.ack == 0
+tcp.stream == 0
 tls
 ```
 
-## Safety and disclosure
+**Note:** DNS answers, TLS configuration and HTTP responses can change with time, geography, cache and network configuration. Do not expect the same IP address or measurements in every run.
 
-- Capture **only** traffic you are authorized to inspect.
-- Do not upload real credentials, session tokens, internal infrastructure details, or personally identifying packet data.
-- Review all screenshots and exported files before sharing, including if this repository is made public later.
-- If an earlier VM was used for potentially vulnerable software or is of uncertain integrity, build a **fresh VM** rather than trusting an OS upgrade to make it safe.
+## Documentation
 
-## Planned deliverables
+- [Technical investigation report](reports/network-traffic-report.md) — packet evidence, observed fields, timing and limitations
+- [Lab walkthrough](docs/lab-01-basic-traffic.md) — commands, capture steps and protocol filters
+- [Case study for the portfolio](docs/case-study.md) — concise problem, methodology and outcome
+- [Evidence handling guide](evidence/README.md) — required redaction checks before sharing screenshots
 
-- A repeatable capture methodology
-- A technical report with observed protocol flows
-- Reviewed screenshots (no sensitive data)
-- Conclusions and troubleshooting notes
+## Blue Team takeaways
+
+1. **Correlation matters:** connect a DNS answer to an observed subsequent TCP destination, without assuming that DNS resolution alone proves service availability.
+2. **Separate layers:** distinguish TCP establishment from TLS negotiation, certificate verification and HTTP application responses.
+3. **Treat encrypted data accurately:** Wireshark exposes TLS metadata, not the decrypted HTTP payload by default.
+4. **Report only what the evidence shows:** response status 301 was verified with curl; no redirect destination is claimed.
+
+## Privacy and scope
+
+- The lab uses traffic generated by the operator in a controlled environment.
+- Real PCAP/PCAPNG files are excluded from version control to reduce accidental disclosure of IPs, MAC addresses, browsing history or credentials.
+- Screenshots are **not yet published**; they must be redacted and checked first.
+- This is a protocol investigation, **not** evidence of compromise or an incident-response engagement.
 
 ---
 
-*This is an educational, independently documented lab. All three protocol exercises have been analyzed from reviewed screenshots. Sanitized evidence and final polishing remain in progress.*
+*Personal educational project. Technical investigation completed; public evidence review pending.*
