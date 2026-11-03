@@ -16,12 +16,12 @@ A hands-on Blue Team laboratory for capturing, filtering, and interpreting netwo
 
 | Component | Planned setup |
 | --- | --- |
-| Operating system | Clean, updated Kali Linux VM (or another trusted OS) |
-| Network analysis | Wireshark / TShark |
+| Operating system | Kali GNU/Linux 2026.3 (observed in local test) |
+| Network analysis | Wireshark 4.6.6, interface `eth0` |
 | Test traffic | `ping`, `nslookup` or `dig`, `curl` |
 | Test destination | `example.com` and `1.1.1.1` (illustrative public endpoints) |
 
-The actual OS version, Wireshark version, interface, and test results will be documented **after running the lab**.
+The OS and Wireshark versions were verified from local commands. An initial ICMP capture has been reviewed; remaining tests are pending.
 
 ## Project structure
 
@@ -41,10 +41,10 @@ Screenshots will be added only after reviewing them for sensitive details. Raw p
 | Exercise | Protocol | Status |
 | --- | --- | --- |
 | 01 — DNS resolution | DNS | Not started |
-| 02 — Echo request / reply | ICMP | Not started |
+| 02 — Echo request / reply | ICMP | Reviewed: 4 request/reply pairs |
 | 03 — Connection setup & encryption metadata | TCP / TLS | Not started |
 
-Follow the instructions in [Lab 01](docs/lab-01-basic-traffic.md) and record findings in the [analysis template](reports/traffic-analysis-template.md).
+Follow the instructions in [Lab 01](docs/lab-01-basic-traffic.md) and see the [ongoing traffic analysis report](reports/traffic-analysis-template.md) for verified findings.
 
 ## Wireshark display filters
 
@@ -71,4 +71,4 @@ tls
 
 ---
 
-*This is an educational, independently documented lab. Results will be added after validation; no captures or findings are claimed yet.*
+*This is an educational, independently documented lab. Only observations supported by reviewed evidence are reported; DNS and TLS analysis are still in progress.*
