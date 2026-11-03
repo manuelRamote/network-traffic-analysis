@@ -79,6 +79,14 @@ tls
 
 **Note:** DNS answers, TLS configuration and HTTP responses can change with time, geography, cache and network configuration. Do not expect the same IP address or measurements in every run.
 
+## Reviewed screenshots
+
+### HTTPS response — HTTP 301
+
+![Sanitized HTTP 301 result](evidence/07-http-301.png)
+
+The remaining reviewed images (ICMP request/reply pairs, TCP handshake and curl certificate verification) are prepared but **not yet uploaded**. DNS and full TLS screenshots are awaiting improved captures.
+
 ## Documentation
 
 - [Technical investigation report](reports/network-traffic-report.md) — packet evidence, observed fields, timing and limitations
