@@ -150,21 +150,30 @@ The provided terminal screenshot documents a **separate HTTPS session**. Its loc
 | Certificate verification | `SSL certificate verify ok`; OpenSSL verify result `0` |
 | HTTP protocol | HTTP/2, via ALPN |
 | HTTP request | `HEAD /` with authority `microsoft.com` |
-| HTTP status | **Not visible in the provided screenshot; pending verification** |
+| HTTP status | **301 (Moved Permanently)** — confirmed in a subsequent `curl -I` request |
 
-**Assessment:** The terminal output verifies that the local curl/OpenSSL client accepted the presented certificate and negotiated a TLS 1.3 connection. A HEAD request was issued over HTTP/2. The screenshot does **not** include the server response headers or an HTTP status code. The observed hybrid `X25519MLKEM768` key exchange combines classic and post-quantum key establishment mechanisms.
+**Assessment:** The terminal output verifies that the local curl/OpenSSL client accepted the presented certificate and negotiated a TLS 1.3 connection. A HEAD request was issued over HTTP/2. The first verbose screenshot did not include response headers or a status code; a subsequent `curl` request independently confirmed HTTP status **301** (a permanent redirect). The destination URL was not shown, so no redirect target is asserted. The observed hybrid `X25519MLKEM768` key exchange combines classic and post-quantum key establishment mechanisms.
+
+**Follow-up verification:**
+
+```bash
+curl -4 -sS -o /dev/null -w 'HTTP status: %{http_code}\n' -I https://microsoft.com
+# Observed output: HTTP status: 301
+```
+
+A 301 response means the requested resource is redirected permanently. The `Location` response header was not recorded in this screenshot; the redirect target and final destination status remain unverified. The curl result is from a separate request, not the exact packets examined in the earlier `tcp.stream == 0` capture.
 
 **Evidence handling:** screenshots reviewed in the working session. The original screenshots include private lab identifiers and have **not** been committed to GitHub.
 
 ## 5. Findings and limitations
 
 - **Confirmed observations:** Four ICMP Echo Requests to `1.1.1.1` have four corresponding replies (mean observed RTT ≈ 14.63 ms). A DNS A-record query for `microsoft.com` returned `NOERROR` and one observed address (response time 7.186521 ms). TCP stream 0 shows the complete SYN/SYN-ACK/ACK handshake to port 443, a TLS 1.3 ClientHello and ServerHello, encrypted application data, and a FIN/ACK closure.
-- **Uncertainties / limitations:** Findings are based on screenshots, not full original PCAP files. The DNS record TTL was not visible; curl reports a successful certificate/hostname validation in a separate session, while the HTTP response status remains unavailable in the supplied screenshot. Screenshots still require redaction before publication.
-- **Potential next tests:** Capture the HTTP response status and headers from `curl -4 -I https://microsoft.com`, record sanitized evidence, and optionally inspect DNS answer TTL.
+- **Uncertainties / limitations:** Findings are based on screenshots, not full original PCAP files. The DNS record TTL was not visible; curl reports a successful certificate/hostname validation in a separate session, and a subsequent curl request returned HTTP status `301`; the redirect destination was not captured. Screenshots still require redaction before publication.
+- **Potential next tests:** Optionally inspect the HTTP `Location` header (and the redirected endpoint if desired); prepare sanitized screenshots; optionally inspect the DNS answer TTL.
 
 ## 6. Conclusions
 
-The ICMP test demonstrates four matched Echo Request/Reply exchanges. The DNS test shows successful resolution of an A record for `microsoft.com`. The TCP stream confirms connection establishment, TLS 1.3 negotiation and encrypted traffic exchange, followed by an orderly close. A separate curl test confirmed successful TLS certificate/hostname validation and an HTTP/2 HEAD request (response status not yet visible). The project is technically analyzed but the public-facing evidence and presentation still need preparation.
+The ICMP test demonstrates four matched Echo Request/Reply exchanges. The DNS test shows successful resolution of an A record for `microsoft.com`. The TCP stream confirms connection establishment, TLS 1.3 negotiation and encrypted traffic exchange, followed by an orderly close. A separate curl test confirmed TLS certificate/hostname validation and an HTTP/2 HEAD request; a subsequent `curl -I` check returned HTTP 301. The project is technically analyzed but the public-facing evidence and presentation still need preparation.
 
 ## 7. Data handling
 
