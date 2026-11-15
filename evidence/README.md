@@ -1,44 +1,31 @@
-# Evidence preparation and privacy checklist
+# Evidence index and release checklist
 
-One sanitized screenshot (`07-http-301.png`) has been uploaded. Other image evidence remains pending upload and/or recapture. The original Wireshark and terminal screenshots were reviewed during the lab; only explicitly reviewed and sanitized images should be added here.
+**Status:** Nine sanitized PNG screenshots have been uploaded to the **private** repository and are now linked from the [main README](../README.md) and [technical report](../reports/network-traffic-report.md).
 
-## Planned screenshots
+All source traffic was generated for the controlled lab. The screenshots display selected packet/terminal fields; they are not raw PCAP exports. Filenames 08–10 replace the earlier single combined TLS image 05.
 
-| Suggested filename | Content to preserve | Redact or crop |
+## Uploaded screenshots
+
+| File | Exercise | Details |
 | --- | --- | --- |
-| `01-icmp-echo.png` | Four request/reply pairs, sequence correlation, timings | Private IPs, interface MACs, machine-identifying labels |
-| `02-dns-query.png` and `03-dns-response.png` | Query name, A-record answer, transaction ID, NOERROR, response time | Local resolver and client addresses where identifiable; MACs |
-| `04-tcp-handshake.png` | SYN, SYN-ACK, ACK, TCP stream index | Client private IP and MAC addresses |
-| `05-tls13-session.png` | ClientHello, ServerHello, TLS version, encrypted-data markers | Client private IP and any unrelated connection data |
-| `06-https-certificate.png` | Certificate verify result, negotiated TLS/HTTP, HTTP 301 | Hostname of local machine, paths, unrelated output and local IP |
+| [`01-icmp-echo.png`](01-icmp-echo.png) | ICMP | Four matched Echo Request/Reply pairs |
+| [`02-dns-query.png`](02-dns-query.png) | DNS | Follow-up request, transaction ID `0x1397` |
+| [`03-dns-response.png`](03-dns-response.png) | DNS | NOERROR, A record, response time **3.385220 ms** |
+| [`04-tcp-handshake.png`](04-tcp-handshake.png) | TCP | SYN / SYN-ACK / ACK from the original stream |
+| [`06-https-certificate.png`](06-https-certificate.png) | HTTPS | curl TLS/certificate verification |
+| [`07-http-301.png`](07-http-301.png) | HTTP | Separate HEAD request returning 301 |
+| [`08-tls-client-hello.png`](08-tls-client-hello.png) | TLS 1.3 | ClientHello / SNI |
+| [`09-tls-server-hello.png`](09-tls-server-hello.png) | TLS 1.3 | ServerHello / cipher / key share |
+| [`10-tls-application-data.png`](10-tls-application-data.png) | TLS 1.3 | Opaque encrypted records (type 23) |
 
-## Publication checks
+## Final review before public release
 
-- [ ] Screenshots were produced from my own controlled lab.
-- [ ] Personal hostnames, local IPs, MAC addresses, usernames and file paths are hidden where not required.
-- [ ] No tokens, credentials, cookies, personal browsing, or unrelated network captures are shown.
-- [ ] Important technical data (flags, packet numbers, timestamps, response codes) remains clearly legible.
-- [ ] Redaction is visibly applied instead of replacing packet values with fabricated ones.
-- [ ] Explanations clearly distinguish **observed** data from inference.
-- [ ] Every image is referenced in the report or README only **after** it is added.
-- [ ] Repository visibility is reviewed deliberately before making it public.
+- [ ] Open **each committed PNG in GitHub** and verify that private IP/MAC addresses, usernames, paths, unrelated traffic and hidden identifiers are not readable.
+- [ ] Confirm that the underlying PNGs contain no unwanted metadata or embedded sensitive material.
+- [ ] Ensure timestamps, packet numbers, TLS parameters and DNS response timings match the corresponding report sections.
+- [ ] Distinguish follow-up DNS/TLS sessions from earlier packet streams; do not merge their timings or packet numbers.
+- [ ] Verify that the README and report display correctly in GitHub's rendered view.
+- [ ] Ensure no raw `.pcap`/`.pcapng` files, session tokens, passwords or personal browsing data were uploaded.
+- [ ] Only then consider switching repository visibility from private to public.
 
-## Upload policy
-
-Do **not** commit raw `.pcap` or `.pcapng` files from a personal or corporate network. Even when a repository is private, packet captures may contain sensitive payloads and identifying information.
-
-Until screenshot redaction is complete, use the packet summaries and the [technical report](../reports/network-traffic-report.md) as the validated evidence.
-
-> **Caution:** Simply blurring a small area can leave information recoverable or readable. Prefer opaque masks or cropping. Keep original evidence privately outside the public repository.
-
-## Evidence upload tracking
-
-| Evidence | Status |
-| --- | --- |
-| `01-icmp-echo.png` | Sanitized locally; upload pending |
-| `02-dns-query.png` | Improved capture pending |
-| `03-dns-response.png` | Improved capture pending |
-| `04-tcp-handshake.png` | Sanitized locally; upload pending |
-| `05-tls13-session.png` | Improved split captures pending |
-| `06-https-certificate.png` | Sanitized locally; upload pending |
-| `07-http-301.png` | Uploaded and linked in README |
+**Privacy:** Redaction or cropping should use opaque removal of identifying values. A private repository is not a substitute for the checks above.
