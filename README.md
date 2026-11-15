@@ -1,5 +1,7 @@
 # Network Traffic Analysis Lab
 
+![Network Traffic Analysis Lab — cover artwork](assets/network-traffic-banner.svg)
+
 ![Blue Team](https://img.shields.io/badge/Blue%20Team-Network%20Analysis-0969da?style=flat-square)
 ![Wireshark](https://img.shields.io/badge/Wireshark-4.6.6-555?style=flat-square)
 ![Status](https://img.shields.io/badge/Technical%20lab-Completed-238636?style=flat-square)
