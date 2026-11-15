@@ -84,7 +84,8 @@ sequenceDiagram
     C->>S: ACK
     C->>S: TLS ClientHello
     S-->>C: TLS ServerHello
-    C-->>S: Encrypted TLS records
+    C->>S: Encrypted TLS records
+    S-->>C: Encrypted TLS records
     Note over C,S: Separate curl tests verified certificate and HTTP 301
 ```
 
