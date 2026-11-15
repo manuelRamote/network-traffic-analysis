@@ -1,99 +1,127 @@
-# Lab 01 — Basic network traffic investigation
+# Lab 01 — Network traffic analysis with Wireshark
 
-**Status:** Planned / not yet executed
+**Status:** Completed and documented · November 2026  
+**Focus:** ICMP, DNS, TCP, TLS 1.3 and HTTPS  
+**Tools:** Kali Linux 2026.3 · Wireshark 4.6.6 · `ping` · `dig` · `curl`
 
-## 0. Prerequisites and safety
+This walkthrough documents the methodology used in the completed [Network Traffic Analysis Lab](../README.md). It is also intended to help reproduce the tests safely. **Packet numbers, stream indices, timings and remote IP addresses can change between runs.**
 
-Use a **clean, patched VM** or a trusted host. If the existing Kali VM was previously isolated due to vulnerable services or concerns about compromise, do **not** reconnect it; install a fresh VM instead.
+## 1. Scope and safe setup
 
-Capture only your own traffic or traffic you are expressly authorized to analyze. Use a short capture window. Avoid browsing personal accounts while capturing.
+Capture **only traffic you own or are explicitly authorized to inspect**. Use a trusted, updated lab machine and short capture windows. Avoid browsing personal accounts while capturing.
 
-Record the following (do not publish your full personal IP addresses or local network topology):
+1. Start Wireshark on the Kali lab VM.
+2. Select the interface carrying the test traffic (`eth0` in the documented run).
+3. Start a capture **without a capture filter** so the protocol exchanges can be correlated.
+4. Run the commands below from a separate terminal, one at a time.
+5. Stop the capture after the tests finish.
 
-```bash
-cat /etc/os-release
-wireshark --version
-ip -br addr
-ip route
-```
+If packet capture fails, check interface permissions and `dumpcap` setup. Do not run the whole Wireshark GUI as root merely to bypass permissions.
 
-The last two commands may contain network details: redact them from screenshots shared publicly.
-
-## 1. Start a capture
-
-1. Open Wireshark on the trusted system.
-2. Select the active network interface that carries your lab traffic (e.g., `eth0`, `ens33`, `enp0s3`, depending on the VM).
-3. Begin capturing. For the first run, use **no capture filter** so that you can compare different protocols.
-4. Keep the capture to a short session and generate the test traffic below.
-
-If the GUI cannot capture packets, first check interface permissions and `dumpcap` configuration; do not run the entire Wireshark GUI as root just to bypass permissions.
-
-## 2. Generate known test traffic
-
-Run the following in a separate terminal, one command at a time:
+## 2. Generate controlled traffic
 
 ```bash
-# ICMP echo
+# ICMP reachability
 ping -c 4 1.1.1.1
 
-# DNS lookup
+# DNS A-record resolution
 dig microsoft.com
 
-# HTTPS request (TCP + TLS, unless a proxy changes the flow)
-curl -I https://example.com
+# HTTPS request, TLS negotiation and verbose certificate check
+curl -4 -I -v https://microsoft.com
+
+# Separate HEAD request to display the returned HTTP status
+curl -4 -sS -o /dev/null -w 'HTTP status: %{http_code}\n' -I https://microsoft.com
 ```
 
-The output and traces depend on DNS cache, proxy settings, VM networking and network connectivity. A DNS query, TLS handshake or response might not be visible in every configuration.
+DNS caching, proxy configuration, VM networking and remote service behavior can affect what packets are visible. Do not assume an identical response on every run.
 
-Stop the capture when you finish.
+## 3. Analyze each protocol
 
-## 3. Inspect the capture with display filters
-
-### A. ICMP
+### A. ICMP — request/reply correlation
 
 ```text
 icmp
 ```
 
-Look for ICMP echo requests and echo replies. Record the packet count, source/destination **roles** and the observable request/reply relationship. No reply can be caused by filtering or reachability constraints.
+Look for Echo Requests (type 8) and Echo Replies (type 0). Match the identifiers and sequence numbers, then compare capture timestamps. In the documented run, **four requests had four matching replies**, with a mean observed round-trip time of approximately **14.63 ms**.
 
-### B. DNS
+[View the sanitized ICMP evidence](../evidence/01-icmp-echo.png).
+
+### B. DNS — query and response
 
 ```text
-dns
+dns.qry.name == "microsoft.com"
 ```
 
-Use `dns.qry.name == "microsoft.com"` to focus on this lab's query. Inspect request and response packets, transaction ID, queried name, record type, response code, DNS response time, and the answer record TTL if visible in the expanded fields. Note the possibility of different DNS record types or resolver behavior.
+Inspect the domain, query type A/IN, transaction ID, response code and answer. The original test returned `NOERROR` and an A record with a measured response time of **7.186521 ms**. The later screenshot pair is from a **separate DNS test**: transaction `0x1397`, response time **3.385220 ms**.
 
-### C. TCP connection establishment
+[DNS query](../evidence/02-dns-query.png) · [DNS response](../evidence/03-dns-response.png)
+
+Do not confuse the **DNS record TTL** with the IPv4 packet TTL.
+
+### C. TCP — three-way handshake
+
+To find candidate connection initiations:
 
 ```text
 tcp.flags.syn == 1 && tcp.flags.ack == 0
 ```
 
-Find the first SYN packet. Use `Follow → TCP Stream` or the `tcp.stream` filter to inspect the same connection. Where present, identify the SYN, SYN-ACK and ACK packets.
+Select the connection of interest and use **Follow → TCP Stream**, or filter on its specific index (`tcp.stream == N`). Identify the SYN, SYN-ACK and ACK frames. The documented original stream completed the three-way handshake on port **443**, with approximately **13.84 ms** from SYN to SYN-ACK.
 
-### D. TLS
+The stream index `N` is assigned per capture; **do not assume it is always zero**.
+
+[View the sanitized TCP evidence](../evidence/04-tcp-handshake.png).
+
+### D. TLS 1.3 — handshake messages
 
 ```text
-tls
+tls.handshake.type == 1 || tls.handshake.type == 2
 ```
 
-Look for `Client Hello` and `Server Hello` and relevant metadata. HTTPS application content is encrypted and should **not** be described as visible in plaintext. Depending on TLS version and capture timing, parts of the handshake may also be encrypted.
+Inspect ClientHello (including SNI when available), ServerHello, cipher suite and `supported_versions`. In the follow-up capture, the negotiated version was **TLS 1.3**, with cipher suite `TLS_AES_256_GCM_SHA384` and key share `X25519MLKEM768`.
 
-## 4. Record findings
+[ClientHello](../evidence/08-tls-client-hello.png) · [ServerHello](../evidence/09-tls-server-hello.png)
 
-Use [the technical report](../reports/network-traffic-report.md) as a reference and record findings from your own capture. Include:
+TLS 1.3 can display a legacy record-version value of `TLS 1.2 (0x0303)`; the negotiated version is determined by the handshake negotiation, not that compatibility field alone.
 
-- Date (approximate is enough for a public version) and isolated lab description
-- OS and Wireshark versions
-- Commands used
-- Display filters and packet numbers **from your own capture**
-- What you actually observed vs. what you expected
-- Limitations and explanations for missing traffic
+### E. TLS encrypted records
 
-## 5. Export policy
+```text
+tls.record.opaque_type == 23
+```
 
-Do not commit unreviewed `.pcap` or `.pcapng` files. Packet captures can contain MAC addresses, IP addresses, DNS history, tokens, cookies and other sensitive information.
+This filter selects records with **outer content type 23 (Application Data)**. TLS 1.3 uses this outer type for encrypted records, which can also contain encrypted handshake messages. Do not describe the encrypted HTTP payload as readable or assume every matching record carries HTTP content.
 
-For a public-facing portfolio, favor screenshots with identifying values redacted and a written analysis; if a PCAP is essential, generate a separate synthetic or safely sanitized example first. See the [evidence checklist](../evidence/README.md).
+[View sanitized encrypted TLS records](../evidence/10-tls-application-data.png).
+
+### F. HTTPS certificate and HTTP response
+
+The verbose `curl` session reported successful certificate/hostname verification and HTTP/2 negotiation:
+
+[Certificate verification evidence](../evidence/06-https-certificate.png).
+
+A subsequent independent `curl -I` request returned **HTTP 301**:
+
+[HTTP status evidence](../evidence/07-http-301.png).
+
+The redirected destination was **not** established in the recorded evidence. These terminal commands are **not the same TCP session** used for the Wireshark handshake timings.
+
+## 4. Interpret and report findings
+
+When writing up a lab:
+
+- Include the test goal, tool versions and **commands actually executed**.
+- Identify which screenshot proves each claim, citing fields or matching frames.
+- Distinguish facts from inferences; avoid calling ordinary TLS traffic malicious.
+- Keep the **original and follow-up captures separate** when citing packet numbers or timing measurements.
+- Document uncertainty where a certificate, response header or DNS TTL was not inspected.
+
+See the [technical report](../reports/network-traffic-report.md) for the detailed analysis, or the [portfolio case study](case-study.md) for the condensed findings.
+
+## 5. Publication and handling
+
+Only carefully reviewed, sanitized **screenshots** belong in the public portfolio. Do not upload raw `.pcap` / `.pcapng` files containing personal IP addresses, MAC addresses, credentials, DNS history or unrelated traffic.
+
+Before changing repository visibility, complete the [evidence privacy and release checklist](../evidence/README.md).
