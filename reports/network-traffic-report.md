@@ -1,6 +1,6 @@
 # Network Traffic Analysis — Technical Report
 
-> **Status:** ICMP, DNS, TCP/TLS and HTTP checks completed; nine sanitized screenshots linked in the private repository.
+> **Status:** ICMP, DNS, TCP/TLS and HTTP checks completed; nine sanitized screenshots linked in the repository.
 
 ## 1. Investigation summary
 
@@ -163,7 +163,7 @@ curl -4 -sS -o /dev/null -w 'HTTP status: %{http_code}\n' -I https://microsoft.c
 
 A 301 response means the requested resource is redirected permanently. The `Location` response header was not recorded in this screenshot; the redirect target and final destination status remain unverified. The curl result is from a separate request, not the exact packets examined in the earlier `tcp.stream == 0` capture.
 
-**Evidence handling:** [sanitized TCP handshake](../evidence/04-tcp-handshake.png), [certificate verification](../evidence/06-https-certificate.png), and [HTTP 301 response](../evidence/07-http-301.png) are stored in the private repository. Raw packet captures have not been uploaded.
+**Evidence handling:** [sanitized TCP handshake](../evidence/04-tcp-handshake.png), [certificate verification](../evidence/06-https-certificate.png), and [HTTP 301 response](../evidence/07-http-301.png) are stored in the repository. Raw packet captures have not been uploaded.
 
 
 ### 4.4 Follow-up DNS and TLS captures — November 2026
@@ -207,7 +207,7 @@ The TLS follow-up frames are from another session. Their packet numbers must not
 
 ## 6. Conclusions
 
-The ICMP test demonstrates four matched Echo Request/Reply exchanges. The DNS test shows successful resolution of an A record for `microsoft.com`. The TCP stream confirms connection establishment, TLS 1.3 negotiation and encrypted traffic exchange, followed by an orderly close. A separate curl test confirmed TLS certificate/hostname validation and an HTTP/2 HEAD request; a subsequent `curl -I` check returned HTTP 301. The investigation is complete; sanitized screenshots have been linked in the private repository and remain subject to final review before public release.
+The ICMP test demonstrates four matched Echo Request/Reply exchanges. The DNS test shows successful resolution of an A record for `microsoft.com`. The TCP stream confirms connection establishment, TLS 1.3 negotiation and encrypted traffic exchange, followed by an orderly close. A separate curl test confirmed TLS certificate/hostname validation and an HTTP/2 HEAD request; a subsequent `curl -I` check returned HTTP 301. The investigation is complete; sanitized screenshots have been linked in the repository. See the evidence privacy and release checklist for the final review.
 
 ## 7. Data handling
 
