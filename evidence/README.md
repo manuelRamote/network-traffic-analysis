@@ -1,6 +1,6 @@
 # Evidence index and release checklist
 
-**Status:** Nine sanitized PNG screenshots have been uploaded to the **private** repository and are now linked from the [main README](../README.md) and [technical report](../reports/network-traffic-report.md).
+**Status:** Nine sanitized PNG screenshots have been uploaded to the repository and are linked from the [main README](../README.md) and [technical report](../reports/network-traffic-report.md).
 
 All source traffic was generated for the controlled lab. The screenshots display selected packet/terminal fields; they are not raw PCAP exports. Filenames 08–10 replace the earlier single combined TLS image 05.
 
@@ -18,7 +18,7 @@ All source traffic was generated for the controlled lab. The screenshots display
 | [`09-tls-server-hello.png`](09-tls-server-hello.png) | TLS 1.3 | ServerHello / cipher / key share |
 | [`10-tls-application-data.png`](10-tls-application-data.png) | TLS 1.3 | Opaque encrypted records (type 23) |
 
-## Final review before public release
+## Privacy and release checklist
 
 - [ ] Open **each committed PNG in GitHub** and verify that private IP/MAC addresses, usernames, paths, unrelated traffic and hidden identifiers are not readable.
 - [ ] Confirm that the underlying PNGs contain no unwanted metadata or embedded sensitive material.
