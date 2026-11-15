@@ -1,6 +1,6 @@
 # Network Traffic Analysis — Technical Report
 
-> **Status:** ICMP, DNS, TCP/TLS and HTTP checks completed; screenshot sanitization pending.
+> **Status:** ICMP, DNS, TCP/TLS and HTTP checks completed; nine sanitized screenshots linked in the private repository.
 
 ## 1. Investigation summary
 
@@ -59,7 +59,7 @@ tls
   - Frames 10 → 11: **14.25 ms**
   - Mean of these four observations: **approximately 14.63 ms**
 - Interpretation: the capture shows successful ICMP Echo Request/Reply exchanges and no missing replies **among the four requests visible here**. This is evidence of successful ICMP reachability for the test, not proof that other ports or protocols are reachable.
-- Screenshot: reviewed in the working session; **not committed** to GitHub (it shows a private lab IP and should be redacted before publication).
+- Evidence: [sanitized ICMP request/reply capture](../evidence/01-icmp-echo.png).
 
 **Methodology note:** the ICMP types are Echo Request = **8** and Echo Reply = **0**; the `Time` column reflects capture timestamps, so the round-trip estimate includes the capture's timing and matching uncertainty.
 
@@ -88,7 +88,7 @@ tls
 
 **Interpretation:** The DNS resolver answered the A-record question successfully, and the transaction identifier pairs the two observed DNS packets. The returned A record reflects this particular response and may change between queries or networks. The screenshots do not expose the DNS record TTL; do not substitute the IPv4 packet TTL.
 
-**Limitations:** This demonstrates DNS resolution, not successful TCP/TLS connectivity to the resolved address. The screenshots were reviewed for analysis but are **not committed** to the repository pending redaction of local network identifiers.
+**Limitations:** This demonstrates DNS resolution, not successful TCP/TLS connectivity to the resolved address. The follow-up DNS screenshots are available in sanitized form: [query](../evidence/02-dns-query.png) and [response](../evidence/03-dns-response.png). These show a separate test; see section 4.4.
 
 ### 4.3 TCP / TLS — Verified TCP handshake and TLS exchange
 
@@ -163,17 +163,51 @@ curl -4 -sS -o /dev/null -w 'HTTP status: %{http_code}\n' -I https://microsoft.c
 
 A 301 response means the requested resource is redirected permanently. The `Location` response header was not recorded in this screenshot; the redirect target and final destination status remain unverified. The curl result is from a separate request, not the exact packets examined in the earlier `tcp.stream == 0` capture.
 
-**Evidence handling:** screenshots reviewed in the working session. The original screenshots include private lab identifiers and have **not** been committed to GitHub.
+**Evidence handling:** [sanitized TCP handshake](../evidence/04-tcp-handshake.png), [certificate verification](../evidence/06-https-certificate.png), and [HTTP 301 response](../evidence/07-http-301.png) are stored in the private repository. Raw packet captures have not been uploaded.
+
+
+### 4.4 Follow-up DNS and TLS captures — November 2026
+
+These screenshots are from **additional controlled captures** and should not be treated as the same packet exchange as earlier tests.
+
+#### DNS follow-up: `microsoft.com`
+
+![Sanitized DNS query for microsoft.com](../evidence/02-dns-query.png)
+
+![Sanitized DNS response for microsoft.com](../evidence/03-dns-response.png)
+
+- Query/response: **frames 3 and 4**, transaction ID `0x1397`.
+- Query: DNS A record, class IN, for `microsoft.com`.
+- Response: `NOERROR`, one A answer `150.171.109.83`.
+- Wireshark response time: **3.385220 ms**.
+- This is **not** the earlier DNS query with transaction `0x28be` and time **7.186521 ms**. The two durations reflect separate measurements.
+
+#### TLS 1.3 follow-up
+
+![Sanitized TLS ClientHello](../evidence/08-tls-client-hello.png)
+
+![Sanitized TLS ServerHello](../evidence/09-tls-server-hello.png)
+
+![Sanitized TLS opaque Application Data records](../evidence/10-tls-application-data.png)
+
+- **Frame 12 — ClientHello:** SNI `microsoft.com`, client TCP source port `50176`.
+- **Frame 15 — ServerHello:** cipher suite `TLS_AES_256_GCM_SHA384`; extension `supported_versions` indicates **TLS 1.3**; key share `X25519MLKEM768`.
+- **Frame 27:** three TLS records marked **Opaque Type: Application Data (23)**, with visible record lengths **282**, **282** and **57** bytes.
+- Filter used: `tls.record.opaque_type == 23`.
+- TLS 1.3 records may show `TLS 1.2 (0x0303)` in the legacy record-version field; this does not establish a TLS 1.2 negotiation.
+- Type 23 is an **outer encrypted-record type** in TLS 1.3. It can also carry encrypted handshake traffic; these screenshots do not reveal plaintext HTTP payloads.
+
+The TLS follow-up frames are from another session. Their packet numbers must not be combined with the earlier TLS stream's packet chronology.
 
 ## 5. Findings and limitations
 
 - **Confirmed observations:** Four ICMP Echo Requests to `1.1.1.1` have four corresponding replies (mean observed RTT ≈ 14.63 ms). A DNS A-record query for `microsoft.com` returned `NOERROR` and one observed address (response time 7.186521 ms). TCP stream 0 shows the complete SYN/SYN-ACK/ACK handshake to port 443, a TLS 1.3 ClientHello and ServerHello, encrypted application data, and a FIN/ACK closure.
-- **Uncertainties / limitations:** Findings are based on screenshots, not full original PCAP files. The DNS record TTL was not visible; curl reports a successful certificate/hostname validation in a separate session, and a subsequent curl request returned HTTP status `301`; the redirect destination was not captured. Screenshots still require redaction before publication.
-- **Potential next tests:** Optionally inspect the HTTP `Location` header (and the redirected endpoint if desired); prepare sanitized screenshots; optionally inspect the DNS answer TTL.
+- **Uncertainties / limitations:** Findings are based on screenshots, not full original PCAP files. The DNS record TTL was not visible; curl reports a successful certificate/hostname validation in a separate session, and a subsequent curl request returned HTTP status `301`; the redirect destination was not captured. The uploaded screenshots have been sanitized; final privacy review is still needed before making the repository public.
+- **Potential next tests:** Optionally inspect the HTTP `Location` header (and the redirected endpoint if desired); complete the final privacy review before release; optionally inspect the DNS answer TTL.
 
 ## 6. Conclusions
 
-The ICMP test demonstrates four matched Echo Request/Reply exchanges. The DNS test shows successful resolution of an A record for `microsoft.com`. The TCP stream confirms connection establishment, TLS 1.3 negotiation and encrypted traffic exchange, followed by an orderly close. A separate curl test confirmed TLS certificate/hostname validation and an HTTP/2 HEAD request; a subsequent `curl -I` check returned HTTP 301. The investigation is complete; publication-ready screenshots still require review and redaction.
+The ICMP test demonstrates four matched Echo Request/Reply exchanges. The DNS test shows successful resolution of an A record for `microsoft.com`. The TCP stream confirms connection establishment, TLS 1.3 negotiation and encrypted traffic exchange, followed by an orderly close. A separate curl test confirmed TLS certificate/hostname validation and an HTTP/2 HEAD request; a subsequent `curl -I` check returned HTTP 301. The investigation is complete; sanitized screenshots have been linked in the private repository and remain subject to final review before public release.
 
 ## 7. Data handling
 
