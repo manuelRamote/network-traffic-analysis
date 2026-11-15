@@ -25,7 +25,7 @@ This mini-investigation starts with network reachability and DNS resolution, fol
 | Layer | Finding | Significance |
 | --- | --- | --- |
 | ICMP | Four matched Echo Request / Echo Reply pairs; average observed RTT ~14.63 ms | Confirms ICMP reachability in this test |
-| DNS | A-record response for `microsoft.com`; NOERROR; 7.186521 ms | Shows a functioning resolver for this query |
+| DNS | A-record response for `microsoft.com`; NOERROR; 7.186521 ms initially and 3.385220 ms in a follow-up | Shows successful resolution in two separate tests |
 | TCP | Three-way handshake completed on port 443; SYN→SYN-ACK ~13.84 ms | Confirms successful TCP setup |
 | TLS | TLS 1.3 ClientHello/ServerHello and encrypted data | Confirms a negotiated encrypted transport in the captured stream |
 | Certificate | curl reports hostname match and verify result 0 | Independently verifies certificate acceptance by the local TLS client |
@@ -39,8 +39,8 @@ This mini-investigation starts with network reachability and DNS resolution, fol
 
 ## Outcome
 
-The controlled investigation reconstructed the network path from a DNS answer to TCP/TLS communication and obtained an HTTP response. The findings are documented in the [full technical report](../reports/network-traffic-report.md), with screenshots deliberately withheld until they can be sanitized.
+The controlled investigation reconstructed the network path from a DNS answer to TCP/TLS communication and obtained an HTTP response. The findings are documented in the [full technical report](../reports/network-traffic-report.md), with nine sanitized screenshots available in the [evidence directory](../evidence/).
 
 ## Next improvement
 
-Add carefully redacted screenshots of the ICMP, DNS, TCP/TLS and curl output. If extending the lab, compare the baseline with a safely generated example of DNS resolution failure or TCP connection refusal.
+Complete the final public-release privacy review of the uploaded screenshots. If extending the lab, compare the baseline with a safely generated example of DNS resolution failure or TCP connection refusal.
