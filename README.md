@@ -8,7 +8,7 @@
 
 A practical, evidence-based **Blue Team / Network Security** project built with Wireshark and Kali Linux. I generated authorized test traffic, inspected packets and correlated observations across network layers. This project focuses on *protocol analysis and documentation*, not simulated attacks or claims of compromise.
 
-> **Project status:** Analysis and documentation complete; the repository remains private pending final image/privacy review.
+ > **Project status:** Analysis and documentation complete; nine sanitized screenshots are included as supporting evidence.
 
 ## Key findings
 
@@ -137,8 +137,8 @@ Results such as DNS answers, timings, TLS parameters and HTTP status codes may v
 - **No malicious activity or security compromise was identified or claimed.**
 - The screenshots provide protocol and TLS record **metadata**, not decrypted HTTP contents.
 - The HTTP 301 result and curl certificate verification come from **separate requests**, not the Wireshark TCP stream used for handshake timing.
-- Raw PCAP/PCAPNG files are excluded from version control. The nine uploaded screenshots were prepared to remove identifiable details, but **must be checked one final time** before changing repository visibility.
+- Raw PCAP/PCAPNG files are excluded from version control. Nine sanitized screenshots are included. See the [evidence release checklist](evidence/README.md) for privacy checks.
 
 ---
 
-*Independent educational project · Blue Team fundamentals · Final public-release review pending.*
+*Independent educational project · Blue Team fundamentals · Evidence-based network analysis.*
